@@ -1,34 +1,37 @@
 import 'dart:isolate';
 
-
 import 'package:xleb/config/models/isolate_node.dart';
 import 'package:xleb/config/network_config.dart';
+import 'package:xleb/services/node_state_service.dart';
 
 import 'isolate_message.dart';
 import 'message_type.dart';
-
-typedef NetworkMessageHandler = void Function(int nodeId, IsolateMessage message);
+import 'node_event.dart';
 
 // Класс для управления сетью изолятов
 class IsolateNetwork {
   final NetworkConfig config;
   final Map<int, IsolateNode> _nodes = {};
   final Map<int, SendPort> _nodePorts = {};
-  final NetworkMessageHandler? onMessageReceived;
+  final stateService = NodeStateService();
 
-  IsolateNetwork(this.config, {this.onMessageReceived});
+  IsolateNetwork(this.config);
 
   // Создание сети изолятов
   Future<void> initialize() async {
     for (final node in config.nodes) {
       final isolateNode = await IsolateNode.create(
-        node, 
+        node,
         config,
+        /// служит только для отправки во внешний мир
         onMessageReceived: (message) {
-          onMessageReceived?.call(node.id, message);
-          _handleNodeMessage(message);
+          stateService.reportNodeEvent(
+            NodeEvent(
+              nodeId: node.id,
+              messageType: message.type,
+            ),
+          );
         },
-
       );
       _nodes[node.id] = isolateNode;
       _nodePorts[node.id] = isolateNode.sendPort;
@@ -51,7 +54,6 @@ class IsolateNetwork {
     }
   }
 
-  // Отправка сообщения конкретному узлу
   Future<void> sendMessageToNode(
     int toId,
     String content, {
@@ -73,7 +75,6 @@ class IsolateNetwork {
     return targetNode.sendMessage(message);
   }
 
-  // Остановка всех изолятов
   Future<void> dispose() async {
     for (final node in _nodes.values) {
       await node.dispose();
@@ -82,7 +83,3 @@ class IsolateNetwork {
     _nodePorts.clear();
   }
 }
-
-
-
-

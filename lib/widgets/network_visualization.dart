@@ -8,7 +8,7 @@ class NetworkVisualization extends StatefulWidget {
   final NetworkConfig config;
   final double nodeRadius;
   final Color edgeColor;
-  final Map<int, NodeState> nodeStates;
+  final Map<int, Color> nodeStates;
   final Function(int nodeId)? onNodeTap;
 
   const NetworkVisualization({
@@ -72,7 +72,7 @@ class _NetworkVisualizationState extends State<NetworkVisualization> {
                     width: widget.nodeRadius * 2,
                     height: widget.nodeRadius * 2,
                     decoration: BoxDecoration(
-                      color: widget.nodeStates[node.id]?.color ?? NodeState.idle.color,
+                      color: widget.nodeStates[node.id] ?? Colors.grey,
                       shape: BoxShape.circle,
                     ),
                     child: Center(

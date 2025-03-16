@@ -28,7 +28,7 @@ class IsolateNode {
   IsolateNode._(this.config, this.networkConfig, {this.onMessageReceived});
 
   static Future<IsolateNode> create(
-    Node config, 
+    Node config,
     NetworkConfig networkConfig, {
     MessageHandler? onMessageReceived,
   }) async {
@@ -49,8 +49,12 @@ class IsolateNode {
       ),
     );
 
-    // Настраиваем слушателя для всех входящих сообщений
     receivePort.listen((message) {
+      if (message is List && onMessageReceived != null) {
+        final IsolateMessage isolateMessage = message[0];
+        onMessageReceived!(isolateMessage);
+      }
+
       if (message is SendPort) {
         // Первое сообщение - это SendPort от изолята
         _sendPort = message;
@@ -59,7 +63,7 @@ class IsolateNode {
         // Получаем сообщение и его ID
         final IsolateMessage isolateMessage = message[0];
         final String messageId = message[1];
-        
+
         // Проверяем, есть ли ожидающий ответа Completer
         final responseCompleter = _pendingResponses[messageId];
         if (responseCompleter != null) {
@@ -84,10 +88,9 @@ class IsolateNode {
     final completer = Completer<IsolateMessage>();
     final messageId = '${config.id}-${_messageCounter++}';
     _pendingResponses[messageId] = completer;
-    
+
     final responsePort = ReceivePort();
     sendPort.send([message, responsePort.sendPort, messageId]);
-
   }
 
   Future<void> dispose() async {
@@ -100,4 +103,4 @@ class IsolateNode {
     receivePort.close();
     isolate.kill();
   }
-} 
+}
