@@ -46,33 +46,24 @@ class IsolateNode {
         nodeId: config.id,
         receivePort: receivePort.sendPort,
         neighbors: config.neighbors,
+        // onMessageReceived: onMessageReceived,
       ),
     );
 
+    /// слушатель для общения вне
     receivePort.listen((message) {
-      if (message is List && onMessageReceived != null) {
-        final IsolateMessage isolateMessage = message[0];
-        onMessageReceived!(isolateMessage);
-      }
-
       if (message is SendPort) {
-        // Первое сообщение - это SendPort от изолята
         _sendPort = message;
         completer.complete();
-      } else if (message is List && message.length == 2) {
-        // Получаем сообщение и его ID
+      } else if (message is List) {
         final IsolateMessage isolateMessage = message[0];
         final String messageId = message[1];
-
-        // Проверяем, есть ли ожидающий ответа Completer
+        onMessageReceived!(isolateMessage);
         final responseCompleter = _pendingResponses[messageId];
         if (responseCompleter != null) {
           responseCompleter.complete(isolateMessage);
           _pendingResponses.remove(messageId);
-        } else {
-          // Если нет ожидающего Completer, это входящее сообщение
-          onMessageReceived?.call(isolateMessage);
-        }
+        } else {}
       }
     });
 

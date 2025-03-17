@@ -17,7 +17,7 @@ class IsolateNetwork {
 
   IsolateNetwork(this.config);
 
-  // Создание сети изолятов
+
   Future<void> initialize() async {
     for (final node in config.nodes) {
       final isolateNode = await IsolateNode.create(
@@ -47,12 +47,6 @@ class IsolateNetwork {
     }
   }
 
-  Future<void> _handleNodeMessage(IsolateMessage message) async {
-    final targetNode = _nodes[message.toId];
-    if (targetNode != null) {
-      await targetNode.sendMessage(message);
-    }
-  }
 
   Future<void> sendMessageToNode(
     int toId,

@@ -15,7 +15,7 @@ class NodeStateService {
   NodeStateService._internal();
 
   void reportNodeEvent(NodeEvent event) {
-    final value = nodeEventsController.value;
+    final value =   nodeEventsController.value;
     final newMap = {...value};
     newMap[event.nodeId] = mapColor[event.messageType]!;
     nodeEventsController.add(newMap);
